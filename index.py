@@ -4449,28 +4449,14 @@ street_names = [
 	"crvena staza"
 ]
 
-app = Flask(__name__)
+@app.route('/search', methods=['GET'])
+def search():
+    query = request.args.get('query')
+    if not query:
+        return jsonify({'error': 'Missing query parameter'}), 400
 
-@app.route('/match_street', methods=['POST'])
-def match_street():
-    data = request.get_json()
-    street_name = data.get('street_name')
-    if not street_name:
-        return jsonify({'error': 'Street name not provided'}), 400
-
-    best_match, score = process.extractOne(street_name, street_names)
-    response = {
-        'input': street_name,
-        'best_match': best_match,
-        'score': score
-    }
-
-    response_json = json.dumps(response, ensure_ascii=False)
-    return app.response_class(
-        response=response_json,
-        status=200,
-        mimetype='application/json; charset=utf-8'
-    )
+    results = process.extract(query, street_names, limit=5)
+    return jsonify({'results': results})
 
 if __name__ == '__main__':
     app.run(debug=True)
